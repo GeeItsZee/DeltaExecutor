@@ -1,0 +1,26 @@
+# DeltaExecutor Configuration File
+
+# The minimum number of threads the executor can have at any time.
+# Too many creates many idles threads. Too few leads to overhead with recreating threads and large queues.
+# Default: 5
+CoreThreadCount: 5
+
+# Maximum number of threads the executor can have at any time.
+# Too many creates many idle threads. Too few leads to overhead with recreating threads and large queues.
+# Default: 5
+MaxThreadCount: 5
+
+# If a non-core thread does not receive any work for this duration, it will be terminated.
+# Default: 5 (minutes)
+IdleThreadTimeout: 5
+
+# When the executor is shut down, it will wait for all tasks to complete. There are three possibile reasons
+# for tasks not able to complete: deadlock, tasks that take a very long time to complete, and tasks
+# remaining in the queue.
+# Default: 10 (1 pass = 30 second wait)
+NiceShutdownPasses: 10
+
+# If you need to track your tasks in the logs (assuming you know the relevant task IDs), this option
+# will allow you to see more details (about executing, cleanup, cancellation)
+# Default: True
+Debug: True
