@@ -49,8 +49,8 @@ public class DeltaExecutor
             niceShutdownPasses, debugEnabled);
     }
 
-    private boolean acceptingNewTasks;
-    private boolean debugEnabled;
+    private volatile boolean acceptingNewTasks;
+    private volatile boolean debugEnabled;
     private final Logger logger;
     private final int niceShutdownPasses;
     private final ThreadPoolExecutor threadPoolExecutor;
@@ -207,8 +207,6 @@ public class DeltaExecutor
 
         try
         {
-            // Assumption: Multiple threads will not try to execute the same task
-
             if(asyncTask.switchToRunning())
             {
                 debug("Running task #" + taskId);

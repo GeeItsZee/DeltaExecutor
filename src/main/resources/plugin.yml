@@ -1,4 +1,4 @@
 name: DeltaExecutor
 main: com.gmail.tracebachi.DeltaExecutor.DeltaExecutorPlugin
-version: 1.0
+version: ${project.version}
 author: Trace Bachi (tracebachi@gmail.com, BigBossZee)
