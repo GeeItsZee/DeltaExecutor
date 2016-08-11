@@ -21,7 +21,18 @@ package com.gmail.tracebachi.DeltaExecutor.Enums;
  */
 public enum TaskStatus
 {
+    /**
+     * Represents a task waiting to be run.
+     */
     WAITING,
+
+    /**
+     * Represents a task currently running.
+     */
     RUNNING,
+
+    /**
+     * Represents a task that was cancelled before running.
+     */
     CANCELLED
 }

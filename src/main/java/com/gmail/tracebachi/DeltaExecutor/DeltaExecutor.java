@@ -18,6 +18,7 @@ package com.gmail.tracebachi.DeltaExecutor;
 
 import com.gmail.tracebachi.DeltaExecutor.Enums.CancelResult;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -37,16 +38,20 @@ public class DeltaExecutor
         return Preconditions.checkNotNull(instance, "DeltaExecutor has not been initialized yet.");
     }
 
-    static void initialize(Logger logger, int coreThreadCount, int maxThreadCount, int idleThreadTimeout,
-        int niceShutdownPasses, boolean debugEnabled)
+    static void initialize(Logger logger, int coreThreadCount, int maxThreadCount,
+                           int idleThreadTimeout, int niceShutdownPasses, boolean debugEnabled)
     {
         if(instance != null)
         {
             throw new IllegalStateException("An instance of DeltaExecutor already exists.");
         }
 
-        instance = new DeltaExecutor(logger, coreThreadCount, maxThreadCount, idleThreadTimeout,
-            niceShutdownPasses, debugEnabled);
+        instance = new DeltaExecutor(logger,
+            coreThreadCount,
+            maxThreadCount,
+            idleThreadTimeout,
+            niceShutdownPasses,
+            debugEnabled);
     }
 
     private volatile boolean acceptingNewTasks;
@@ -56,8 +61,8 @@ public class DeltaExecutor
     private final ThreadPoolExecutor threadPoolExecutor;
     private final ConcurrentHashMap<Long, AsyncTask> taskMap;
 
-    private DeltaExecutor(Logger logger, int coreThreadCount, int maxThreadCount, int idleThreadTimeout,
-        int niceShutdownPasses, boolean debugEnabled)
+    private DeltaExecutor(Logger logger, int coreThreadCount, int maxThreadCount,
+                          int idleThreadTimeout, int niceShutdownPasses, boolean debugEnabled)
     {
         this.logger = logger;
         this.niceShutdownPasses = niceShutdownPasses;
@@ -69,8 +74,8 @@ public class DeltaExecutor
             maxThreadCount,
             idleThreadTimeout,
             TimeUnit.MINUTES,
-            new LinkedBlockingQueue<>()
-        );
+            new LinkedBlockingQueue<>(),
+            new ThreadFactoryBuilder().setNameFormat("delta-executor-pool-%d").build());
 
         this.acceptingNewTasks = true;
     }
@@ -109,7 +114,6 @@ public class DeltaExecutor
      * not accepting new tasks, the runnable passed will run synchronously.
      *
      * @param toExecute Runnable to execute
-     *
      * @return Assigned task ID.
      */
     public long execute(Runnable toExecute)
@@ -136,7 +140,6 @@ public class DeltaExecutor
      * Attempts to cancel the task with the passed task ID.
      *
      * @param taskId Assigned task ID.
-     *
      * @return {@link CancelResult#CANCELLED} is the task was successfully
      * cancelled. {@link CancelResult#RUNNING} if the task is currently
      * being executed. {@link CancelResult#NOT_FOUND} if the task ID is
@@ -172,7 +175,7 @@ public class DeltaExecutor
      */
     public void shutdown()
     {
-        if(!acceptingNewTasks) return;
+        if(!acceptingNewTasks) { return; }
 
         info("Shutting down DeltaExecutor ...");
 
@@ -193,6 +196,8 @@ public class DeltaExecutor
         }
 
         info("All tasks executed from this point on will be run synchronously.");
+        info("Running tasks synchronously means your server may run slower if other plugins " +
+            "relying on DeltaExecutor use it assuming it is running tasks not synchronously.");
     }
 
     private void runTask(long taskId)

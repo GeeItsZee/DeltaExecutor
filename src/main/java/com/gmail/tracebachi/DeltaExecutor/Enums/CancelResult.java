@@ -21,7 +21,18 @@ package com.gmail.tracebachi.DeltaExecutor.Enums;
  */
 public enum CancelResult
 {
+    /**
+     * Represents a cancelled task.
+     */
     CANCELLED,
+
+    /**
+     * Represents a currently running task.
+     */
     RUNNING,
+
+    /**
+     * Indicates the desired task was not found.
+     */
     NOT_FOUND
 }

@@ -1,4 +1,6 @@
+###############################################################################
 # DeltaExecutor Configuration File
+###############################################################################
 
 # The minimum number of threads the executor can have at any time.
 # Too many creates many idles threads. Too few leads to overhead with recreating threads and large queues.

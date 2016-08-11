@@ -16,6 +16,9 @@
  */
 package com.gmail.tracebachi.DeltaExecutor;
 
+import org.bukkit.ChatColor;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -41,13 +44,68 @@ public class DeltaExecutorPlugin extends JavaPlugin
             maxThreadCount,
             idleThreadTimeout,
             niceShutdownPasses,
-            debugEnabled
-        );
+            debugEnabled);
     }
 
     @Override
     public void onDisable()
     {
         DeltaExecutor.instance().shutdown();
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
+    {
+        if(!sender.hasPermission("DeltaExecutor.Debug"))
+        {
+            String message = ChatColor.translateAlternateColorCodes(
+                '&',
+                "&8[&c!&8] &cFailure &8[&c!&8]&7 " +
+                    "You do not have the &fDeltaExecutor.Debug&7 permission.");
+
+            sender.sendMessage(message);
+            return true;
+        }
+
+        if(args.length == 0)
+        {
+            String message = ChatColor.translateAlternateColorCodes(
+                '&',
+                "&8[&c!&8] &cFailure &8[&c!&8]&7 /deltaexecutordebug <on|off>");
+
+            sender.sendMessage(message);
+            return true;
+        }
+
+        DeltaExecutor instance = DeltaExecutor.instance();
+
+        if(args[0].equalsIgnoreCase("on"))
+        {
+            String message = ChatColor.translateAlternateColorCodes(
+                '&',
+                "&8[&9!&8] &9Info &8[&9!&8]&7 DeltaExecutorDebug: &fON");
+
+            instance.setDebugEnabled(true);
+            sender.sendMessage(message);
+        }
+        else if(args[0].equalsIgnoreCase("off"))
+        {
+            String message = ChatColor.translateAlternateColorCodes(
+                '&',
+                "&8[&9!&8] &9Info &8[&9!&8]&7 DeltaExecutorDebug: &fOFF");
+
+            instance.setDebugEnabled(false);
+            sender.sendMessage(message);
+        }
+        else
+        {
+            String message = ChatColor.translateAlternateColorCodes(
+                '&',
+                "&8[&c!&8] &cFailure &8[&c!&8]&7 /deltaexecutordebug <on|off>");
+
+            sender.sendMessage(message);
+        }
+
+        return true;
     }
 }

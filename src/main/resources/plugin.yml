@@ -2,3 +2,6 @@ name: DeltaExecutor
 main: com.gmail.tracebachi.DeltaExecutor.DeltaExecutorPlugin
 version: ${project.version}
 author: Trace Bachi (tracebachi@gmail.com, BigBossZee)
+commands:
+  deltaexecutordebug:
+    usage: "/deltaexecutordebug <on|off>"
