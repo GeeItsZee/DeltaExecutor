@@ -17,7 +17,6 @@
 package com.gmail.tracebachi.DeltaExecutor;
 
 import com.gmail.tracebachi.DeltaExecutor.Enums.CancelResult;
-import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,27 +32,6 @@ public class DeltaExecutor
 {
     private static DeltaExecutor instance;
 
-    public static DeltaExecutor instance()
-    {
-        return Preconditions.checkNotNull(instance, "DeltaExecutor has not been initialized yet.");
-    }
-
-    static void initialize(Logger logger, int coreThreadCount, int maxThreadCount,
-                           int idleThreadTimeout, int niceShutdownPasses, boolean debugEnabled)
-    {
-        if(instance != null)
-        {
-            throw new IllegalStateException("An instance of DeltaExecutor already exists.");
-        }
-
-        instance = new DeltaExecutor(logger,
-            coreThreadCount,
-            maxThreadCount,
-            idleThreadTimeout,
-            niceShutdownPasses,
-            debugEnabled);
-    }
-
     private volatile boolean acceptingNewTasks;
     private volatile boolean debugEnabled;
     private final Logger logger;
@@ -61,27 +39,21 @@ public class DeltaExecutor
     private final ThreadPoolExecutor threadPoolExecutor;
     private final ConcurrentHashMap<Long, AsyncTask> taskMap;
 
-    private DeltaExecutor(Logger logger, int coreThreadCount, int maxThreadCount,
-                          int idleThreadTimeout, int niceShutdownPasses, boolean debugEnabled)
+    /**
+     * @return Singleton reference to DeltaExecutor
+     */
+    public static DeltaExecutor instance()
     {
-        this.logger = logger;
-        this.niceShutdownPasses = niceShutdownPasses;
-        this.debugEnabled = debugEnabled;
-        this.taskMap = new ConcurrentHashMap<>();
+        if(instance == null)
+        {
+            throw new IllegalStateException("DeltaExecutor has not been initialized");
+        }
 
-        this.threadPoolExecutor = new ThreadPoolExecutor(
-            coreThreadCount,
-            maxThreadCount,
-            idleThreadTimeout,
-            TimeUnit.MINUTES,
-            new LinkedBlockingQueue<>(),
-            new ThreadFactoryBuilder().setNameFormat("delta-executor-pool-%d").build());
-
-        this.acceptingNewTasks = true;
+        return instance;
     }
 
     /**
-     * @return {@code true} if debug is enabled.
+     * @return True if debug is enabled or false
      */
     public boolean isDebugEnabled()
     {
@@ -89,18 +61,19 @@ public class DeltaExecutor
     }
 
     /**
-     * @param debugEnabled {@code true} if debug should be enabled.
+     * @param enable Boolean which controls if debug should be enabled or not
      */
-    public void setDebugEnabled(boolean debugEnabled)
+    public void setDebugEnabled(boolean enable)
     {
-        this.debugEnabled = debugEnabled;
+        this.debugEnabled = enable;
     }
 
     /**
-     * @return {@code true} if the executor will accept tasks to be run
-     * asynchronously. If this method returns {@code false}, tasks can
-     * still be executed using {@link #execute(Runnable)}, but they
-     * will run synchronously.
+     * This method returns true if new tasks are being accepted to run
+     * asynchronously. If they cannot be run async, they will be run
+     * sync immediately.
+     *
+     * @return True or false.
      */
     public boolean isAcceptingNewTasks()
     {
@@ -108,13 +81,13 @@ public class DeltaExecutor
     }
 
     /**
-     * If the executor is accepting new tasks (can be checked using
-     * {@link #isAcceptingNewTasks()}, the runnable passed to this method
-     * will be added to a queue to run asynchronously. If the executor is
-     * not accepting new tasks, the runnable passed will run synchronously.
+     * If the executor is accepting new tasks (see {@link #isAcceptingNewTasks()},
+     * the runnable passed to this method will be added to a queue to run
+     * asynchronously. If the executor is not accepting new tasks, the
+     * runnable passed will run synchronously.
      *
      * @param toExecute Runnable to execute
-     * @return Assigned task ID.
+     * @return Assigned task ID
      */
     public long execute(Runnable toExecute)
     {
@@ -137,13 +110,13 @@ public class DeltaExecutor
     }
 
     /**
-     * Attempts to cancel the task with the passed task ID.
+     * Attempts to cancel the task with the passed task ID
      *
-     * @param taskId Assigned task ID.
+     * @param taskId Assigned task ID
      * @return {@link CancelResult#CANCELLED} is the task was successfully
-     * cancelled. {@link CancelResult#RUNNING} if the task is currently
-     * being executed. {@link CancelResult#NOT_FOUND} if the task ID is
-     * unknown (either the task has completed or never existed).
+     * cancelled, {@link CancelResult#RUNNING} if the task is currently
+     * being executed, or {@link CancelResult#NOT_FOUND} if the task ID is
+     * unknown (either the task has completed or never existed)
      */
     public CancelResult cancel(long taskId)
     {
@@ -163,12 +136,12 @@ public class DeltaExecutor
             }
         }
 
-        debug("Task #" + taskId + " was not found during an attempt to switchToCancelled it.");
+        debug("Task #" + taskId + " was not found during an attempt to cancel it.");
         return CancelResult.NOT_FOUND;
     }
 
     /**
-     * Attempts to shut down the executor nicely by waiting for all tasks.
+     * This method attempts to shut down the executor nicely by waiting for all tasks.
      * If the executor fails to shutdown nicely, it will be shutdown forcibly.
      * In which case, worker threads will be interrupted and queued tasks will
      * be run synchronously.
@@ -198,6 +171,45 @@ public class DeltaExecutor
         info("All tasks executed from this point on will be run synchronously.");
         info("Running tasks synchronously means your server may run slower if other plugins " +
             "relying on DeltaExecutor use it assuming it is running tasks not synchronously.");
+    }
+
+    static void initialize(Logger logger, int coreThreadCount, int maxThreadCount,
+                           int idleThreadTimeout, int niceShutdownPasses, boolean debugEnabled)
+    {
+        if(instance != null)
+        {
+            throw new IllegalStateException("An instance of DeltaExecutor already exists.");
+        }
+
+        instance = new DeltaExecutor(
+            logger,
+            coreThreadCount,
+            maxThreadCount,
+            idleThreadTimeout,
+            niceShutdownPasses,
+            debugEnabled);
+    }
+
+    /**
+     * Private constructor for DeltaExecutor
+     */
+    private DeltaExecutor(Logger logger, int coreThreadCount, int maxThreadCount,
+                          int idleThreadTimeout, int niceShutdownPasses, boolean debugEnabled)
+    {
+        this.logger = logger;
+        this.niceShutdownPasses = niceShutdownPasses;
+        this.debugEnabled = debugEnabled;
+        this.taskMap = new ConcurrentHashMap<>();
+
+        this.threadPoolExecutor = new ThreadPoolExecutor(
+            coreThreadCount,
+            maxThreadCount,
+            idleThreadTimeout,
+            TimeUnit.MINUTES,
+            new LinkedBlockingQueue<>(),
+            new ThreadFactoryBuilder().setNameFormat("delta-executor-pool-%d").build());
+
+        this.acceptingNewTasks = true;
     }
 
     private void runTask(long taskId)

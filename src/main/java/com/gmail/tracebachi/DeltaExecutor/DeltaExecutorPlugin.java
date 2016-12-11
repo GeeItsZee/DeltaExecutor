@@ -16,7 +16,6 @@
  */
 package com.gmail.tracebachi.DeltaExecutor;
 
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -32,11 +31,11 @@ public class DeltaExecutorPlugin extends JavaPlugin
         saveDefaultConfig();
         reloadConfig();
 
-        int coreThreadCount = getConfig().getInt("CoreThreadCount");
-        int maxThreadCount = getConfig().getInt("MaxThreadCount");
-        int idleThreadTimeout = getConfig().getInt("IdleThreadTimeout");
-        int niceShutdownPasses = getConfig().getInt("NiceShutdownPasses");
-        boolean debugEnabled = getConfig().getBoolean("Debug");
+        int coreThreadCount = getConfig().getInt("CoreThreadCount", 5);
+        int maxThreadCount = getConfig().getInt("MaxThreadCount", 5);
+        int idleThreadTimeout = getConfig().getInt("IdleThreadTimeout", 5);
+        int niceShutdownPasses = getConfig().getInt("NiceShutdownPasses", 19);
+        boolean debugEnabled = getConfig().getBoolean("Debug", false);
 
         DeltaExecutor.initialize(
             getLogger(),
@@ -58,22 +57,13 @@ public class DeltaExecutorPlugin extends JavaPlugin
     {
         if(!sender.hasPermission("DeltaExecutor.Debug"))
         {
-            String message = ChatColor.translateAlternateColorCodes(
-                '&',
-                "&8[&c!&8] &cFailure &8[&c!&8]&7 " +
-                    "You do not have the &fDeltaExecutor.Debug&7 permission.");
-
-            sender.sendMessage(message);
+            sender.sendMessage("You do not have permission for this command.");
             return true;
         }
 
         if(args.length == 0)
         {
-            String message = ChatColor.translateAlternateColorCodes(
-                '&',
-                "&8[&c!&8] &cFailure &8[&c!&8]&7 /deltaexecutordebug <on|off>");
-
-            sender.sendMessage(message);
+            sender.sendMessage("/deltaexecutordebug <on|off>");
             return true;
         }
 
@@ -81,29 +71,17 @@ public class DeltaExecutorPlugin extends JavaPlugin
 
         if(args[0].equalsIgnoreCase("on"))
         {
-            String message = ChatColor.translateAlternateColorCodes(
-                '&',
-                "&8[&9!&8] &9Info &8[&9!&8]&7 DeltaExecutorDebug: &fON");
-
             instance.setDebugEnabled(true);
-            sender.sendMessage(message);
+            sender.sendMessage("DeltaExecutorDebug: On");
         }
         else if(args[0].equalsIgnoreCase("off"))
         {
-            String message = ChatColor.translateAlternateColorCodes(
-                '&',
-                "&8[&9!&8] &9Info &8[&9!&8]&7 DeltaExecutorDebug: &fOFF");
-
             instance.setDebugEnabled(false);
-            sender.sendMessage(message);
+            sender.sendMessage( "DeltaExecutorDebug: Off");
         }
         else
         {
-            String message = ChatColor.translateAlternateColorCodes(
-                '&',
-                "&8[&c!&8] &cFailure &8[&c!&8]&7 /deltaexecutordebug <on|off>");
-
-            sender.sendMessage(message);
+            sender.sendMessage("/deltaexecutordebug <on|off>");
         }
 
         return true;
